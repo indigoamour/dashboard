@@ -45,6 +45,10 @@ export async function POST(
       }
     }
 
+    // Get shippingFee from frontend, default to 0 if not sent
+    const { shippingFee = 0 } = await req.json();
+    total += shippingFee;
+
     const razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID!,
       key_secret: process.env.RAZORPAY_KEY_SECRET!,
