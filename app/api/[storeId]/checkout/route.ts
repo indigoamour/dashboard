@@ -23,7 +23,7 @@ export async function POST(
     //   return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
     // }
 
-    const { items, phone, address } = await req.json();
+    const { items, phone, address, shippingFee = 0 } = await req.json();
 
     if (!items || !phone || !address) {
       return NextResponse.json({ error: "Missing fields" }, { status: 400 });
@@ -45,8 +45,6 @@ export async function POST(
       }
     }
 
-    // Get shippingFee from frontend, default to 0 if not sent
-    const { shippingFee = 0 } = await req.json();
     total += shippingFee;
 
     const razorpay = new Razorpay({
