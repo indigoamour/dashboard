@@ -89,6 +89,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           discount: parseFloat(String(initialData?.discount)),
           collectionTitle: "",
           availableQuantity: 0,
+          description: initialData.description?.replace(/\/n/g, '\n') || "",
         }
       : {
           name: "",
@@ -111,13 +112,20 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const onSubmit = async (data: ProductFormValue) => {
     try {
       setLoading(true);
+      
+      // Convert line breaks to '/n' in description
+      const processedData = {
+        ...data,
+        description: data.description.replace(/\n/g, '/n')
+      };
+      
       if (initialData) {
         await axios.patch(
           `/api/${params.storeId}/products/${params.productId}`,
-          data
+          processedData
         );
       } else {
-        await axios.post(`/api/${params.storeId}/products`, data);
+        await axios.post(`/api/${params.storeId}/products`, processedData);
       }
       router.refresh();
       router.push(`/${params.storeId}/products`);
