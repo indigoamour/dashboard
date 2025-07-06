@@ -38,7 +38,9 @@ export async function POST(
       !availableQuantity ||
       !price ||
       !description ||
-      !images?.length
+      !images?.length ||
+      !collectionTitle ||
+      collectionTitle.trim() === ""
     ) {
       return NextResponse.json(
         { error: "Missing required fields" },
@@ -100,7 +102,7 @@ export async function POST(
   } catch (error) {
     console.error("[PRODUCT_POST]", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: "Internal Server Error", details: error instanceof Error ? error.message : "Unknown error" },
       { status: 500 }
     );
   }

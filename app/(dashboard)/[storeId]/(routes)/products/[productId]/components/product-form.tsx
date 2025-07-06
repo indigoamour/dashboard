@@ -34,20 +34,20 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
-  name: z.string().min(1),
-  description: z.string().min(1),
-  images: z.object({ url: z.string() }).array(),
-  price: z.coerce.number().min(1),
-  cuttedPrice: z.coerce.number().min(1),
-  discount: z.coerce.number().min(0).max(100),
-  categoryId: z.string().min(1),
-  sizeId: z.string().min(1),
-  colorId: z.string().min(1),
-  shippingAvailable: z.string().min(1),
+  name: z.string().min(1, "Name is required"),
+  description: z.string().min(1, "Description is required"),
+  images: z.object({ url: z.string() }).array().min(1, "At least one image is required"),
+  price: z.coerce.number().min(1, "Price must be greater than 0"),
+  cuttedPrice: z.coerce.number().min(1, "Cutted price must be greater than 0"),
+  discount: z.coerce.number().min(0, "Discount cannot be negative").max(100, "Discount cannot exceed 100%"),
+  categoryId: z.string().min(1, "Category is required"),
+  sizeId: z.string().min(1, "Size is required"),
+  colorId: z.string().min(1, "Color is required"),
+  shippingAvailable: z.string().min(1, "Shipping details are required"),
   isFeatured: z.boolean().default(false).optional(),
   isArchived: z.boolean().default(false).optional(),
-  collectionTitle: z.string().min(1),
-  availableQuantity: z.coerce.number().min(0),
+  collectionTitle: z.string().min(1, "Collection title is required"),
+  availableQuantity: z.coerce.number().min(1, "Available quantity must be at least 1"),
 });
 
 type ProductFormValue = z.infer<typeof formSchema>;
@@ -87,9 +87,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           price: parseFloat(String(initialData?.price)),
           cuttedPrice: parseFloat(String(initialData?.cuttedPrice)),
           discount: parseFloat(String(initialData?.discount)),
-          collectionTitle: "",
-          availableQuantity: 0,
+          collectionTitle: initialData.collectionTitle || "",
+          availableQuantity: initialData.availableQuantity || 0,
           description: initialData.description?.replace(/\/n/g, '\n') || "",
+          shippingAvailable: initialData.shippingAvailable || "",
+          categoryId: initialData.categoryId || "",
+          colorId: initialData.colorId || "",
+          sizeId: initialData.sizeId || "",
+          isFeatured: initialData.isFeatured || false,
+          isArchived: initialData.isArchived || false,
         }
       : {
           name: "",
@@ -116,8 +122,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       // Convert line breaks to '/n' in description
       const processedData = {
         ...data,
-        description: data.description.replace(/\n/g, '/n')
+        description: data.description.replace(/\n/g, '/n'),
+        // Ensure numeric fields are properly converted
+        price: parseFloat(data.price.toString()),
+        cuttedPrice: parseFloat(data.cuttedPrice.toString()),
+        discount: parseFloat(data.discount.toString()),
+        availableQuantity: parseFloat(data.availableQuantity.toString())
       };
+      
+      console.log("Submitting product data:", processedData);
       
       if (initialData) {
         await axios.patch(
@@ -130,8 +143,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       router.refresh();
       router.push(`/${params.storeId}/products`);
       toast.success(toastMessage);
-    } catch (error) {
-      toast.error("Something went wrong.");
+    } catch (error: any) {
+      console.error("Form submission error:", error);
+      if (error.response?.data?.error) {
+        toast.error(error.response.data.error);
+      } else {
+        toast.error("Something went wrong.");
+      }
     } finally {
       setLoading(false);
     }

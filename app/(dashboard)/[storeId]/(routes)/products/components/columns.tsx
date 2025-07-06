@@ -13,6 +13,10 @@ export type ProductColumn = {
   color: string;
   isFeatured: boolean;
   isArchived: boolean;
+  collectionTitle: string;
+  availableQuantity: number;
+  discount: number;
+  cuttedPrice: string;
   createdAt: string;
 };
 

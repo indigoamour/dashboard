@@ -10,6 +10,8 @@ export async function PATCH(
   try {
     const session = await getServerSession(authOptions);
     const body = await req.json();
+    console.log("Received product update data:", body);
+    
     const {
       name,
       price,
@@ -36,11 +38,11 @@ export async function PATCH(
     if (!images || !images.length) {
       return NextResponse.json("At least one image is required", { status: 400 });
     }
-    if (!price) {
-      return NextResponse.json("Price is required", { status: 400 });
+    if (!price || price <= 0) {
+      return NextResponse.json("Price must be greater than 0", { status: 400 });
     }
-    if (!availableQuantity) {
-      return NextResponse.json("Available Quantity is required", { status: 400 });
+    if (!availableQuantity || availableQuantity <= 0) {
+      return NextResponse.json("Available Quantity must be greater than 0", { status: 400 });
     }
     if (!description) {
       return NextResponse.json("Description is required", { status: 400 });
@@ -50,14 +52,14 @@ export async function PATCH(
         status: 400,
       });
     }
-    if (!collectionTitle) {
+    if (!collectionTitle || collectionTitle.trim() === "") {
       return NextResponse.json("Collection Title is required", { status: 400 });
     }
-    if (!cuttedPrice) {
-      return NextResponse.json("Cutted Price is required", { status: 400 });
+    if (!cuttedPrice || cuttedPrice <= 0) {
+      return NextResponse.json("Cutted Price must be greater than 0", { status: 400 });
     }
-    if (!discount) {
-      return NextResponse.json("Discount is required", { status: 400 });
+    if (!discount || discount < 0 || discount > 100) {
+      return NextResponse.json("Discount must be between 0 and 100", { status: 400 });
     }
     if (!categoryId) {
       return NextResponse.json("Category is required", { status: 400 });
@@ -123,8 +125,11 @@ export async function PATCH(
       { status: 200 }
     );
   } catch (error) {
-    console.log("[PRODUCT_PATCH] ", error);
-    return NextResponse.json("Internal Server Error", { status: 500 });
+    console.error("[PRODUCT_PATCH] ", error);
+    return NextResponse.json(
+      { error: "Internal Server Error", details: error instanceof Error ? error.message : "Unknown error" },
+      { status: 500 }
+    );
   }
 }
 
