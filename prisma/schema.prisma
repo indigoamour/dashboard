@@ -88,6 +88,7 @@ model Product {
   categoryId        String      @db.ObjectId
   category          Category    @relation("CategoryToProduct", fields: [categoryId], references: [id])
   name              String
+  skuCode           String?    
   collectionTitle   String
   description       String
   cuttedPrice       Float

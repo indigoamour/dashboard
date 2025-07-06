@@ -18,6 +18,7 @@ export async function POST(
     const body = await req.json();
     const {
       name,
+      skuCode,
       price,
       categoryId,
       description,
@@ -35,6 +36,7 @@ export async function POST(
 
     if (
       !name ||
+      !skuCode ||
       !availableQuantity ||
       !price ||
       !description ||
@@ -69,6 +71,7 @@ export async function POST(
     const product = await prismadb.product.create({
       data: {
         name,
+        skuCode,
         price,
         isArchived,
         description,

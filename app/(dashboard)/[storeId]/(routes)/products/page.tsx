@@ -23,6 +23,7 @@ const ProductsPage = async ({ params }: { params: { storeId: string } }) => {
   const formattedProducts: ProductColumn[] = products.map((item) => ({
     id: item.id,
     name: item.name,
+    skuCode: item.skuCode || "",
     description: item.description?.replace(/\/n/g, '\n') || "",
     discount: item.discount,
     shippingAvailable: item.shippingAvailable,

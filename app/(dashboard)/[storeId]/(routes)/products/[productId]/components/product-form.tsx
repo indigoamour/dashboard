@@ -35,6 +35,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
+  skuCode: z.string().min(1, "SKU Code is required"),
   description: z.string().min(1, "Description is required"),
   images: z.object({ url: z.string() }).array().min(1, "At least one image is required"),
   price: z.coerce.number().min(1, "Price must be greater than 0"),
@@ -96,9 +97,11 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           sizeId: initialData.sizeId || "",
           isFeatured: initialData.isFeatured || false,
           isArchived: initialData.isArchived || false,
+          skuCode: initialData.skuCode || "",
         }
       : {
           name: "",
+          skuCode: "",
           description: "",
           images: [],
           price: 0,
@@ -233,6 +236,23 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                     <Input
                       disabled={loading}
                       placeholder="Product name"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="skuCode"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>SKU Code</FormLabel>
+                  <FormControl>
+                    <Input
+                      disabled={loading}
+                      placeholder="SKU-001"
                       {...field}
                     />
                   </FormControl>

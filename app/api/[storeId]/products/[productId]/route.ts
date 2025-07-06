@@ -14,6 +14,7 @@ export async function PATCH(
     
     const {
       name,
+      skuCode,
       price,
       categoryId,
       description,
@@ -34,6 +35,9 @@ export async function PATCH(
     }
     if (!name) {
       return NextResponse.json("Name is required", { status: 400 });
+    }
+    if (!skuCode) {
+      return NextResponse.json("SKU Code is required", { status: 400 });
     }
     if (!images || !images.length) {
       return NextResponse.json("At least one image is required", { status: 400 });
@@ -91,6 +95,7 @@ export async function PATCH(
       },
       data: {
         name,
+        skuCode,
         price,
         description,
         collectionTitle,
