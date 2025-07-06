@@ -18,15 +18,27 @@ export const columns: ColumnDef<ColorColumn>[] = [
   {
     accessorKey: "value",
     header: "Value",
-    cell: ({ row }) => (
-      <div className="flex items-center gap-x-2">
-        {row.original.value}
-        <div
-          className="h-6 w-6 rounded-full border"
-          style={{ backgroundColor: row.original.value }}
-        ></div>
-      </div>
-    ),
+    cell: ({ row }) => {
+      const colorValues = row.original.value.split(',').map(color => color.trim());
+      
+      return (
+        <div className="flex items-center gap-x-2">
+          <span className="text-sm text-muted-foreground">
+            {colorValues.length > 1 ? `${colorValues.length} colors` : '1 color'}
+          </span>
+          <div className="flex items-center gap-x-1">
+            {colorValues.map((color, index) => (
+              <div
+                key={index}
+                className="h-6 w-6 rounded-full border shadow-sm"
+                style={{ backgroundColor: color }}
+                title={color}
+              />
+            ))}
+          </div>
+        </div>
+      );
+    },
   },
   {
     accessorKey: "createdAt",

@@ -28,7 +28,10 @@ const formSchema = z.object({
   value: z
     .string()
     .min(4)
-    .regex(/^#/, { message: "String must be a valid hex code" }),
+    .refine((value) => {
+      const colors = value.split(',').map(color => color.trim());
+      return colors.every(color => /^#[0-9A-Fa-f]{6}$/.test(color));
+    }, { message: "Each color must be a valid hex code (e.g., #FF0000, #00FF00, #0000FF)" }),
 });
 
 type ColorFormValue = z.infer<typeof formSchema>;
@@ -149,26 +152,40 @@ export const ColorForm: React.FC<ColorFormProps> = ({ initialData }) => {
             <FormField
               control={form.control}
               name="value"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Value</FormLabel>
-                  <FormControl>
-                    <div className="flex items-center gap-x-2">
-                      <Input
-                        disabled={loading}
-                        placeholder="Color Value"
-                        {...field}
-                      />
-
-                      <div
-                        className="border p-4 rounded-full"
-                        style={{ backgroundColor: field.value }}
-                      />
-                    </div>
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+              render={({ field }) => {
+                const colorValues = field.value ? field.value.split(',').map(color => color.trim()) : [];
+                
+                return (
+                  <FormItem>
+                    <FormLabel>Value</FormLabel>
+                    <FormControl>
+                      <div className="space-y-2">
+                        <Input
+                          disabled={loading}
+                          placeholder="Color values (e.g., #FF0000, #00FF00, #0000FF)"
+                          {...field}
+                        />
+                        {colorValues.length > 0 && (
+                          <div className="flex items-center gap-x-2">
+                            <span className="text-sm text-muted-foreground">Preview:</span>
+                            <div className="flex items-center gap-x-1">
+                              {colorValues.map((color, index) => (
+                                <div
+                                  key={index}
+                                  className="h-8 w-8 rounded-full border shadow-sm"
+                                  style={{ backgroundColor: color }}
+                                  title={color}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                );
+              }}
             />
           </div>
           <Button disabled={loading} className="ml-auto" type="submit">

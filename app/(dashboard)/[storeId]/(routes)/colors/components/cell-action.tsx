@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import { SizeColumn } from "./columns";
+import { ColorColumn } from "./columns";
 
 import { Button } from "@/components/ui/button";
 import { Copy, Edit, MoreHorizontal, Trash } from "lucide-react";
@@ -17,7 +17,7 @@ import axios from "axios";
 import { AlertModal } from "@/components/modal/alert-modal";
 
 interface CellActionProps {
-  data: SizeColumn;
+  data: ColorColumn;
 }
 
 const CellAction: React.FC<CellActionProps> = ({ data }) => {
