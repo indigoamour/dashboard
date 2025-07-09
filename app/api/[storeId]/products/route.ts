@@ -127,9 +127,6 @@ export async function GET(
     const lowerPrice = parseInt(searchParams.get("lowerPrice") || "0", 10);
     const upperPrice = parseInt(searchParams.get("upperPrice") || "1000", 10);
 
-    console.log("Lower Price:", lowerPrice);
-    console.log("Upper Price:", upperPrice);
-
     if (!params.storeId) {
       return NextResponse.json("Store Id is missing", { status: 400 });
     }
@@ -141,7 +138,7 @@ export async function GET(
       sizeId,
       isFeatured: isFeatured ? true : undefined,
       isArchived: false,
-      collectionTitle,
+      collectionTitle, // this filters when present
     };
 
     if (productName) {
@@ -166,7 +163,7 @@ export async function GET(
         color: true,
         size: true,
       },
-      distinct: ["collectionTitle"]
+      ...(collectionTitle ? {} : { distinct: ["collectionTitle"] }),
     });
 
     return NextResponse.json(
