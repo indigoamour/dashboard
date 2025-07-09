@@ -166,6 +166,7 @@ export async function GET(
         color: true,
         size: true,
       },
+      distinct: ["collectionTitle"]
     });
 
     return NextResponse.json(
