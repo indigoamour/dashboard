@@ -24,7 +24,9 @@ export async function PATCH(
       collectionTitle,
       colorId,
       sizeId,
+
       images,
+      imageUrls,
       shippingAvailable,
       isFeatured,
       isArchived,
@@ -39,7 +41,7 @@ export async function PATCH(
     if (!skuCode) {
       return NextResponse.json("SKU Code is required", { status: 400 });
     }
-    if (!images || !images.length) {
+    if ((!images || !images.length) && (!imageUrls || !imageUrls.length)) {
       return NextResponse.json("At least one image is required", { status: 400 });
     }
     if (!price || price <= 0) {
@@ -106,6 +108,8 @@ export async function PATCH(
         categoryId,
         colorId,
         sizeId,
+
+        imageUrls: imageUrls || images?.map((img: { url: string }) => img.url) || [],
         images: { deleteMany: {} },
         isFeatured,
         isArchived,
@@ -119,7 +123,9 @@ export async function PATCH(
       data: {
         images: {
           createMany: {
-            data: [...images.map((image: { url: string }) => image)],
+            data: images?.map((image: { url: string }) => ({
+              url: image.url,
+            })) || [],
           },
         },
       },

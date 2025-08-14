@@ -28,7 +28,9 @@ export async function POST(
       availableQuantity,
       colorId,
       sizeId,
+
       images,
+      imageUrls,
       shippingAvailable,
       isFeatured,
       isArchived,
@@ -40,7 +42,7 @@ export async function POST(
       !availableQuantity ||
       !price ||
       !description ||
-      !images?.length ||
+      (!images?.length && !imageUrls?.length) ||
       !collectionTitle ||
       collectionTitle.trim() === ""
     ) {
@@ -84,12 +86,14 @@ export async function POST(
         categoryId,
         colorId,
         sizeId,
+
+        imageUrls: imageUrls || images?.map((img: { url: string }) => img.url) || [],
         storeId: params.storeId,
         images: {
           createMany: {
-            data: images.map((image: { url: string }) => ({
+            data: images?.map((image: { url: string }) => ({
               url: image.url,
-            })),
+            })) || [],
           },
         },
       },

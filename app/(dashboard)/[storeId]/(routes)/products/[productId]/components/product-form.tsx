@@ -38,11 +38,13 @@ const formSchema = z.object({
   skuCode: z.string().min(1, "SKU Code is required"),
   description: z.string().min(1, "Description is required"),
   images: z.object({ url: z.string() }).array().min(1, "At least one image is required"),
+  imageUrls: z.string().array().optional(), // New field for simple image URLs
   price: z.coerce.number().min(1, "Price must be greater than 0"),
   cuttedPrice: z.coerce.number().min(1, "Cutted price must be greater than 0"),
   discount: z.coerce.number().min(0, "Discount cannot be negative").max(100, "Discount cannot exceed 100%"),
   categoryId: z.string().min(1, "Category is required"),
-  sizeId: z.string().min(1, "Size is required"),
+  sizeId: z.string().optional(), // Made optional since we use selectedSizeIds in bulk mode
+  selectedSizeIds: z.string().array().min(1, "At least one size is required"), // For bulk creation - selected sizes
   colorId: z.string().min(1, "Color is required"),
   shippingAvailable: z.string().min(1, "Shipping details are required"),
   isFeatured: z.boolean().default(false).optional(),
@@ -74,11 +76,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [bulkMode, setBulkMode] = useState(false);
 
   const title = initialData ? "Edit Product" : "Create a Product";
   const description = initialData ? "Edit a Product" : "Add a new Product";
-  const toastMessage = initialData ? "Product Updated." : "Product Created.";
-  const action = initialData ? "Save Changes" : "Create";
+  const toastMessage = initialData ? "Product Updated." : bulkMode ? "Products Created." : "Product Created.";
+  const action = initialData ? "Save Changes" : bulkMode ? "Create Products" : "Create";
 
   const form = useForm<ProductFormValue>({
     resolver: zodResolver(formSchema),
@@ -95,6 +98,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           categoryId: initialData.categoryId || "",
           colorId: initialData.colorId || "",
           sizeId: initialData.sizeId || "",
+          selectedSizeIds: initialData.sizeId ? [initialData.sizeId] : [],
+                     imageUrls: [],
           isFeatured: initialData.isFeatured || false,
           isArchived: initialData.isArchived || false,
           skuCode: initialData.skuCode || "",
@@ -104,12 +109,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           skuCode: "",
           description: "",
           images: [],
+          imageUrls: [],
           price: 0,
           cuttedPrice: 0,
           discount: 0,
           categoryId: "",
           colorId: "",
           sizeId: "",
+          selectedSizeIds: [],
           shippingAvailable: "",
           isFeatured: false,
           isArchived: false,
@@ -122,6 +129,13 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     try {
       setLoading(true);
       
+      // Validate that at least one size is selected
+      if (data.selectedSizeIds.length === 0) {
+        toast.error("Please select at least one size");
+        setLoading(false);
+        return;
+      }
+      
       // Convert line breaks to '/n' in description
       const processedData = {
         ...data,
@@ -130,16 +144,24 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         price: parseFloat(data.price.toString()),
         cuttedPrice: parseFloat(data.cuttedPrice.toString()),
         discount: parseFloat(data.discount.toString()),
-        availableQuantity: parseFloat(data.availableQuantity.toString())
+        availableQuantity: parseFloat(data.availableQuantity.toString()),
+        // Convert images to imageUrls for new format
+        imageUrls: data.images.map(img => img.url),
+        // For single product creation, set sizeId from selectedSizeIds
+        sizeId: data.selectedSizeIds.length > 0 ? data.selectedSizeIds[0] : data.sizeId
       };
       
       console.log("Submitting product data:", processedData);
+      console.log("Bulk mode:", bulkMode);
+      console.log("Selected sizes:", data.selectedSizeIds);
       
       if (initialData) {
         await axios.patch(
           `/api/${params.storeId}/products/${params.productId}`,
           processedData
         );
+      } else if (bulkMode && data.selectedSizeIds.length > 0) {
+        await axios.post(`/api/${params.storeId}/products/bulk`, processedData);
       } else {
         await axios.post(`/api/${params.storeId}/products`, processedData);
       }
@@ -385,32 +407,34 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             />
             <FormField
               control={form.control}
-              name="sizeId"
+              name="selectedSizeIds"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Size</FormLabel>
-                  <Select
-                    disabled={loading}
-                    onValueChange={field.onChange}
-                    value={field.value}
-                    defaultValue={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue
-                          defaultValue={field.value}
-                          placeholder="Select a size"
+                  <FormLabel>Sizes</FormLabel>
+                  <div className="grid grid-cols-2 gap-2 max-h-40 overflow-y-auto border rounded-md p-2">
+                    {sizes.map((size) => (
+                      <div key={size.id} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={size.id}
+                          checked={field.value?.includes(size.id)}
+                          onCheckedChange={(checked) => {
+                            const currentValues = field.value || [];
+                            if (checked) {
+                              field.onChange([...currentValues, size.id]);
+                            } else {
+                              field.onChange(currentValues.filter(id => id !== size.id));
+                            }
+                          }}
                         />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {sizes.map((size) => (
-                        <SelectItem key={size.id} value={size.id}>
+                        <label
+                          htmlFor={size.id}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
                           {size.name}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+                        </label>
+                      </div>
+                    ))}
+                  </div>
                   <FormMessage />
                 </FormItem>
               )}
@@ -493,6 +517,22 @@ export const ProductForm: React.FC<ProductFormProps> = ({
                 </FormItem>
               )}
             />
+            {!initialData && (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                <FormControl>
+                                     <Checkbox
+                     checked={bulkMode}
+                     onCheckedChange={(checked) => setBulkMode(checked === true)}
+                   />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Bulk Creation Mode</FormLabel>
+                  <FormDescription>
+                    Create separate products for each selected size
+                  </FormDescription>
+                </div>
+              </FormItem>
+            )}
           </div>
           <div className="grid grid-cols-1 gap-8">
             <FormField

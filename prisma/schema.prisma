@@ -103,6 +103,7 @@ model Product {
   colorId           String      @db.ObjectId
   color             Color       @relation(fields: [colorId], references: [id])
   images            Image[]     @relation("ProductToImage")
+  imageUrls         String[]    @default([]) // Keep this for simplified image handling
   orderItems        OrderItem[]
   createdAt         DateTime    @default(now())
   updatedAt         DateTime    @updatedAt

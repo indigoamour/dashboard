@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "migrate": "node scripts/migrate.js"
   },
   "dependencies": {
     "@clerk/nextjs": "^5.7.2",
