@@ -168,6 +168,9 @@ export async function GET(
         size: true,
       },
       ...(collectionTitle ? {} : { distinct: ["collectionTitle"] }),
+      orderBy: {
+        name: "desc",
+      }
     });
 
     return NextResponse.json(
