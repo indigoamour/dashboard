@@ -169,7 +169,7 @@ export async function GET(
       },
       ...(collectionTitle ? {} : { distinct: ["collectionTitle"] }),
       orderBy: {
-        name: "desc",
+        createdAt: "desc",
       }
     });
 
